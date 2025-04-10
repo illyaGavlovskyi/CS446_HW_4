@@ -21,6 +21,8 @@ typedef struct _mblock_t {
     void * payload;
 } mblock_t;
 
+mlist_t mlist = {NULL};
+
 #define MBLOCK_HEADER_SZ offsetof(mblock_t, payload)
 
 typedef struct _mlist_t { 
@@ -73,12 +75,34 @@ void printMemList(const mblock_t* head) {
 
 void* mymalloc(size_t size)
 {
-
+    if (size == 0)
+    {
+        return NULL;
+    }
+    mblock_t *block = findFreeBlockOfSize(size);
+    if(block == NULL)
+    {
+        block = growHeapBySize(size);
+        if(block == NULL)
+        {
+            return NULL;
+        }
+    }
+    splitBlockAtSize(block, size);
+    block->status = 1;
+    return block->payload;
 }
 
 void myfree(void* ptr)
 {
-
+    if(ptr == NULL)
+    {
+        return;
+    }
+    mblock_t* block = (mblock_t*)((char*)ptr - MBLOCK_HEADER_SZ);
+    block->status = 0;
+    coallesceBlockNext(block);
+    coallesceBlockPrev(block);
 }
 
 mblock_t* findLastMemlistBlock()
@@ -98,12 +122,33 @@ void splitBlockAtSize(mblock_t* block, size_t newSize)
 
 void coallesceBlockPrev(mblock_t* freedBlock)
 {
-
+    mblock_t *prev = freedBlock->prev;
+    mblock_t *next = freedBlock->next;
+    if (prev != NULL && prev->status == 0)
+    {
+        prev->size = prev->size + MBLOCK_HEADER_SZ + freedBlock->size;
+        prev->next = next;
+        if (next == NULL)
+        {
+            return;
+        }
+        next->prev = prev;
+    }
 }
 
 void coallesceBlockNext(mblock_t* freedBlock)
 {
-    
+    mblock_t *next = freedBlock->next;
+    if (next != NULL && next->status == 0)
+    {
+        freedBlock->size = freedBlock->size + MBLOCK_HEADER_SZ + next->size;
+        freedBlock->next = next->next;
+        if (next->next == NULL)
+        {
+            return;
+        }
+        next->next->prev = freedBlock;
+    }
 }
 
 mblock_t* growHeapBySize(size_t size)
