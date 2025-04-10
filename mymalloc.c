@@ -120,12 +120,34 @@ mblock_t* findLastMemlistBlock()
 
 mblock_t* findFreeBlockOfSize(size_t size)
 {
-
+    mblock_t* current = mlist.head;
+    while(current != NULL)
+    {
+        if(current->size >= size && current->status == 0)
+        {
+            return current;
+        }
+        else{
+            current = current->next;
+        }
+    }
+    return NULL;
 }
 
 void splitBlockAtSize(mblock_t* block, size_t newSize)
 {
-
+    if(block->size > newSize + MBLOCK_HEADER_SZ)
+    {
+        size_t size = newSize + MBLOCK_HEADER_SZ;
+        mblock_t* newBlock = (mblock_t*)((char*)block + size);
+        newBlock->prev = block;
+        newBlock->next = block->next;
+        newBlock->size = block->size - size;
+        newBlock->status = 0;
+        newBlock->payload = (void *)((char *)newBlock + MBLOCK_HEADER_SZ);
+        block->size = newSize;
+        block->next = newBlock;
+    }
 }
 
 void coallesceBlockPrev(mblock_t* freedBlock)
