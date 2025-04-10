@@ -21,13 +21,13 @@ typedef struct _mblock_t {
     void * payload;
 } mblock_t;
 
-mlist_t mlist = {NULL};
-
 #define MBLOCK_HEADER_SZ offsetof(mblock_t, payload)
 
 typedef struct _mlist_t { 
     mblock_t * head;
 } mlist_t;
+
+mlist_t mlist = {NULL};
 
 void printMemList(const mblock_t* headptr);
 void* mymalloc(size_t size);
@@ -42,18 +42,29 @@ mblock_t* growHeapBySize(size_t size);
 int main(int argc, char* argv[])
 {
     void * p1 = mymalloc(10);
+    printMemList(mlist.head);//
     void * p2 = mymalloc(100);
+    printMemList(mlist.head);//
     void * p3 = mymalloc(200);
+    printMemList(mlist.head);//
     void * p4 = mymalloc(500);
+    printMemList(mlist.head);//
     myfree(p3); p3 = NULL;
+    printMemList(mlist.head);//
     myfree(p2); p2 = NULL;
+    printMemList(mlist.head);//
     void * p5 = mymalloc(150);
+    printMemList(mlist.head);//
     void * p6 = mymalloc(500);
+    printMemList(mlist.head);//
     myfree(p4); p4 = NULL;
+    printMemList(mlist.head);//
     myfree(p5); p5 = NULL;
+    printMemList(mlist.head);//
     myfree(p6); p6 = NULL;
+    printMemList(mlist.head);//
     myfree(p1); p1 = NULL;
-
+    printMemList(mlist.head);//
     return 0;
 }
 
@@ -75,6 +86,7 @@ void printMemList(const mblock_t* head) {
 
 void* mymalloc(size_t size)
 {
+    //printf("illya");
     if(size == 0)
     {
         return NULL;
@@ -88,7 +100,11 @@ void* mymalloc(size_t size)
             return NULL;
         }
     }
-    splitBlockAtSize(block, size);
+    if (block->size > size + MBLOCK_HEADER_SZ + 1024)
+    {
+        splitBlockAtSize(block, size);
+    }
+
     block->status = 1;
     return block->payload;
 }
@@ -188,7 +204,7 @@ mblock_t* growHeapBySize(size_t size)
     if(newBlock == (void*) -1) {
         return NULL;
     }
-    newBlock->size = size - MBLOCK_HEADER_SZ;
+    newBlock->size = size;
     newBlock->status = 0;
     newBlock->payload = (void *)((char *)newBlock + MBLOCK_HEADER_SZ);
     newBlock->next = NULL;
@@ -202,5 +218,6 @@ mblock_t* growHeapBySize(size_t size)
     {
         last->next = newBlock;
     }
+    return newBlock;
 }
 
