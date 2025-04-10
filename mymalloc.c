@@ -75,7 +75,7 @@ void printMemList(const mblock_t* head) {
 
 void* mymalloc(size_t size)
 {
-    if (size == 0)
+    if(size == 0)
     {
         return NULL;
     }
@@ -107,7 +107,15 @@ void myfree(void* ptr)
 
 mblock_t* findLastMemlistBlock()
 {
-
+    mblock_t* current = mlist.head;
+    if(current != NULL)
+    {
+        while(current->next != NULL)
+        {
+            current = current->next;
+        }
+    }
+    return current; 
 }
 
 mblock_t* findFreeBlockOfSize(size_t size)
@@ -124,11 +132,11 @@ void coallesceBlockPrev(mblock_t* freedBlock)
 {
     mblock_t *prev = freedBlock->prev;
     mblock_t *next = freedBlock->next;
-    if (prev != NULL && prev->status == 0)
+    if(prev != NULL && prev->status == 0)
     {
         prev->size = prev->size + MBLOCK_HEADER_SZ + freedBlock->size;
         prev->next = next;
-        if (next == NULL)
+        if(next == NULL)
         {
             return;
         }
@@ -139,11 +147,11 @@ void coallesceBlockPrev(mblock_t* freedBlock)
 void coallesceBlockNext(mblock_t* freedBlock)
 {
     mblock_t *next = freedBlock->next;
-    if (next != NULL && next->status == 0)
+    if(next != NULL && next->status == 0)
     {
         freedBlock->size = freedBlock->size + MBLOCK_HEADER_SZ + next->size;
         freedBlock->next = next->next;
-        if (next->next == NULL)
+        if(next->next == NULL)
         {
             return;
         }
@@ -153,6 +161,24 @@ void coallesceBlockNext(mblock_t* freedBlock)
 
 mblock_t* growHeapBySize(size_t size)
 {
-    
+    size_t totalSize = size + MBLOCK_HEADER_SZ;
+    mblock_t* newBlock = (mblock_t*)sbrk(totalSize);
+    if(newBlock == (void*) -1) {
+        return NULL;
+    }
+    newBlock->size = size - MBLOCK_HEADER_SZ;
+    newBlock->status = 0;
+    newBlock->payload = (void *)((char *)newBlock + MBLOCK_HEADER_SZ);
+    newBlock->next = NULL;
+    mblock_t* last = findLastMemlistBlock();
+    newBlock->prev = last;
+    if (mlist.head == NULL)
+    {
+        mlist.head = newBlock;
+    } 
+    else
+    {
+        last->next = newBlock;
+    }
 }
 
