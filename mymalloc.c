@@ -86,7 +86,6 @@ void printMemList(const mblock_t* head) {
 
 void* mymalloc(size_t size)
 {
-    //printf("illya");
     if(size == 0)
     {
         return NULL;
@@ -143,7 +142,8 @@ mblock_t* findFreeBlockOfSize(size_t size)
         {
             return current;
         }
-        else{
+        else
+        {
             current = current->next;
         }
     }
@@ -201,7 +201,8 @@ mblock_t* growHeapBySize(size_t size)
 {
     size_t totalSize = size + MBLOCK_HEADER_SZ;
     mblock_t* newBlock = (mblock_t*)sbrk(totalSize);
-    if(newBlock == (void*) -1) {
+    if(newBlock == (void*) -1)
+    {
         return NULL;
     }
     newBlock->size = size;
